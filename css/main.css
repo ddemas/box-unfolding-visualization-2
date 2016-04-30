@@ -1,0 +1,113 @@
+
+
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+
+
+#sidebar {
+	position:absolute;
+    float: left;
+    top:0;
+    bottom:0;
+    left:0;
+    width: 480px;
+}
+
+#description {
+    position: absolute;
+    display: block;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    margin: 30px;
+    border: 3px solid #3c3c3c;
+    padding: 20px 20px 40px 20px;
+    background: #F7F8FC;
+    height: auto;
+    min-height: 700px;
+}
+
+#check-boxes {
+    line-height: 180%;
+}
+
+p {
+    text-align: justify;
+    margin: 15px 0 25px 0;
+}
+
+table {
+    height: 80px;
+}
+
+#app-area {
+    /*display: flex;*/
+    position:absolute;
+    top:0;
+    left: 460px;
+    bottom:0;
+    right:0;
+    margin: 30px;
+}
+
+#mainCanvas {
+    position:relative;
+    border:3px solid #3c3c3c;
+}
+
+#width {
+    display:inline-block;
+    width: 220px;
+    float: right;
+}
+#height {
+    display:inline-block;
+    width: 220px;
+    float: right;
+}
+#length {
+    display:inline-block;
+    width: 220px;
+    float: right;
+}
+
+hr {
+    color: #777777;
+    background-color: #777777;
+    border: 1px solid #777777;
+    width: 90%;
+}
+
+#bottom-info {
+    text-align: center;
+    font-family: Helvetica;
+    color: #777777;
+    position: absolute;
+    bottom:20px;
+    left:0;
+    font-size: 8pt;
+    margin: 0 10px 0 10px;
+}
+
+body {
+    padding-top: 0px;
+    padding-bottom: 20px;
+}
+
+input[readonly] {
+    background-color: transparent;
+    border: none;
+    color: orangered;
+}
+span {
+    color: orangered;
+}
+
+
+
+
+
+
+
