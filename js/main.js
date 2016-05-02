@@ -34,6 +34,11 @@ var rectColorsDisp = true;
 var starEdgesDisp = true;
 var fadeDisp = true;
 
+var upperLeftSwap = false;
+var upperRightSwap = false;
+var lowerLeftSwap = false;
+var lowerRightSwap = false;
+
 resizeCanvas();
 setInterval(draw, 10);
 
@@ -44,6 +49,8 @@ function draw() {
     updateCheckBoxes();
 
     rescale();
+
+    setSwapBooleans(sourceX, sourceY);
 
     if (rectColorsDisp) {
         drawBgRectangles(width, height, length);
@@ -72,8 +79,13 @@ function resizeCanvas() {
 }
 
 function rescale() {
-    var totalWidth = width*3 + length*2;
+    var totalWidth = Math.max(width*3 + length*2, width + 2*height + 2*length);
     var totalHeight = Math.max(height*3 + length*2, width*2 + height);
+    // if(!more_wxl_faces) {
+    //     totalWidth = Math.max(width*3 + length*2, width + 2*height);
+    //     totalHeight = Math.max(height*3 + length*2, width*2 + length*2 + height);
+    // }
+
     var newScale = SCALE;
 
     var canvasHeightToWidthRatio = canvas.height / canvas.width;
@@ -85,7 +97,6 @@ function rescale() {
     }
 
     SCALE = newScale;
-
 }
 
 function drawBgRectangles(w, h, l) {
@@ -98,46 +109,71 @@ function drawBgRectangles(w, h, l) {
     drawRectangle(center_x - scaledWidth/2,center_y - scaledHeight*3/2 - scaledLength, scaledWidth, scaledHeight, H_BY_W_COLOR);
     drawRectangle(center_x - scaledWidth/2,center_y + scaledHeight/2 + scaledLength, scaledWidth, scaledHeight, H_BY_W_COLOR);
 
-    drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledHeight,
-        center_y - scaledHeight/2 - scaledWidth,
-        scaledHeight, scaledWidth, H_BY_W_COLOR);
     drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledWidth,
         center_y - scaledHeight/2,
         scaledWidth, scaledHeight, H_BY_W_COLOR);
-    drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledHeight,
-        center_y + scaledHeight/2,
-        scaledHeight, scaledWidth, H_BY_W_COLOR);
 
-    drawRectangle(center_x + scaledWidth/2 + scaledLength,
-        center_y - scaledHeight/2 - scaledWidth,
-        scaledHeight, scaledWidth, H_BY_W_COLOR);
     drawRectangle(center_x + scaledWidth/2 + scaledLength,
         center_y - scaledHeight/2,
         scaledWidth, scaledHeight, H_BY_W_COLOR);
-    drawRectangle(center_x + scaledWidth/2 + scaledLength,
-        center_y + scaledHeight/2,
-        scaledHeight, scaledWidth, H_BY_W_COLOR);
 
     drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2, scaledLength, scaledHeight, H_BY_L_COLOR);
     drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2, scaledLength, scaledHeight, H_BY_L_COLOR);
 
-    drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
     drawRectangle(center_x - scaledWidth/2, center_y - scaledHeight/2 - scaledLength, scaledWidth, scaledLength, W_BY_L_COLOR);
-    drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
-    drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
     drawRectangle(center_x - scaledWidth/2, center_y + scaledHeight/2, scaledWidth, scaledLength, W_BY_L_COLOR);
-    drawRectangle(center_x + scaledWidth/2, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
+
+    if (!upperLeftSwap) {
+        drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledHeight,
+            center_y - scaledHeight/2 - scaledWidth,
+            scaledHeight, scaledWidth, H_BY_W_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
+    } else {
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight,
+            center_y - scaledHeight/2 - scaledWidth - scaledLength,
+            scaledHeight, scaledWidth, H_BY_W_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y - scaledHeight/2 - scaledLength, scaledHeight, scaledLength, H_BY_L_COLOR);
+    }
+
+    if (!upperRightSwap) {
+        drawRectangle(center_x + scaledWidth/2 + scaledLength,
+            center_y - scaledHeight/2 - scaledWidth,
+            scaledHeight, scaledWidth, H_BY_W_COLOR);
+        drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
+    } else {
+        drawRectangle(center_x + scaledWidth/2,
+            center_y - scaledHeight/2 - scaledWidth - scaledLength,
+            scaledHeight, scaledWidth, H_BY_W_COLOR);
+        drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2 - scaledLength, scaledHeight, scaledLength, H_BY_L_COLOR);
+    }
+
+    if (!lowerLeftSwap) {
+        drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledHeight,
+            center_y + scaledHeight/2,
+            scaledHeight, scaledWidth, H_BY_W_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
+    } else {
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight,
+            center_y + scaledHeight/2 + scaledLength,
+            scaledHeight, scaledWidth, H_BY_W_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y + scaledHeight/2, scaledHeight, scaledLength, H_BY_L_COLOR);
+    }
+
+    if (!lowerRightSwap) {
+        drawRectangle(center_x + scaledWidth/2 + scaledLength,
+            center_y + scaledHeight/2,
+            scaledHeight, scaledWidth, H_BY_W_COLOR);
+        drawRectangle(center_x + scaledWidth/2, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
+    } else {
+        drawRectangle(center_x + scaledWidth/2,
+            center_y + scaledHeight/2 + scaledLength,
+            scaledHeight, scaledWidth, H_BY_W_COLOR);
+        drawRectangle(center_x + scaledWidth/2, center_y + scaledHeight/2, scaledHeight, scaledLength, H_BY_L_COLOR);
+    }
+
 }
 
 function drawSymmetricPointsAndLines(relx, rely) {
-    // B(x, y+a+c)
-    // C(-b-c+y, (a+b)/2+x)
-    // D(-b-c-x, y)
-    // E(-(a+b)/2-c+y, -(a+b)/2-x)
-    // F(x, -a-c+y)
-    // G((a+b)/2+c-y, -(a+b)/2+x)
-    // H(b+c-x, -y)
-    // I((a+b)/2+c+y, (a+b)/2-x)
     var scaledHeight = height * SCALE;
     var scaledWidth = width * SCALE;
     var scaledLength = length * SCALE;
@@ -149,6 +185,14 @@ function drawSymmetricPointsAndLines(relx, rely) {
     var rightVertexX = center_x + scaledWidth/2 + scaledLength;
     var topVertexY = center_y - scaledHeight/2;
     var bottomVertexY = center_y + scaledHeight/2;
+
+    // and the vertices we use if there are more hxl faces
+    var SWAPleftVertexX = center_x - scaledWidth/2;
+    var SWAPrightVertexX = center_x + scaledWidth/2;
+    var SWAPtopVertexY = center_y - scaledHeight/2 - scaledLength;
+    var SWAPmidTopVertexY = center_y - scaledHeight/2;
+    var SWAPmidBottomVertexY = center_y + scaledHeight/2;
+    var SWAPbottomVertexY = center_y + scaledHeight/2 + scaledLength;
 
     var voronoi = new Voronoi();
     var bbox = {xl: -50, xr: canvas.width + 50, yt: -50, yb: canvas.height + 50};
@@ -165,61 +209,73 @@ function drawSymmetricPointsAndLines(relx, rely) {
         }
     }
 
+    var innerPolygon = [{x: midLeftVertexX, y: bottomVertexY},
+        {x: leftVertexX, y: bottomVertexY},
+        {x: leftVertexX, y: topVertexY},
+        {x: midLeftVertexX, y: topVertexY},
+        {x: midRightVertexX, y: topVertexY},
+        {x: rightVertexX, y: topVertexY},
+        {x: rightVertexX, y: bottomVertexY},
+        {x: midRightVertexX, y: bottomVertexY}];
+
+    if (lowerLeftSwap) {
+        innerPolygon[0] = {x: SWAPleftVertexX, y: SWAPbottomVertexY};
+        innerPolygon[1] = {x: SWAPleftVertexX, y: SWAPmidBottomVertexY};
+    }
+    if (upperLeftSwap) {
+        innerPolygon[2] = {x: SWAPleftVertexX, y: SWAPmidTopVertexY};
+        innerPolygon[3] = {x: SWAPleftVertexX, y: SWAPtopVertexY};
+    }
+    if (upperRightSwap) {
+        innerPolygon[4] = {x: SWAPrightVertexX, y: SWAPtopVertexY};
+        innerPolygon[5] = {x: SWAPrightVertexX, y: SWAPmidTopVertexY};
+    }
+    if (lowerRightSwap) {
+        innerPolygon[6] = {x: SWAPrightVertexX, y: SWAPmidBottomVertexY};
+        innerPolygon[7] = {x: SWAPrightVertexX, y: SWAPbottomVertexY};
+    }
+
     if (fadeDisp && starEdgesDisp) {
-        fadeOutside(points,
-            [{x: midLeftVertexX, y: bottomVertexY},
-                {x: leftVertexX, y: bottomVertexY},
-                {x: leftVertexX, y: topVertexY},
-                {x: midLeftVertexX, y: topVertexY},
-                {x: midRightVertexX, y: topVertexY},
-                {x: rightVertexX, y: topVertexY},
-                {x: rightVertexX, y: bottomVertexY},
-                {x: midRightVertexX, y: bottomVertexY}],
-            fade);
+        fadeOutside(points, innerPolygon, fade);
     } else if (fadeDisp) {
         fadeEverything(fade);
     }
 
     if (starEdgesDisp) {
-        // F
-        drawStarPerimeter(points[0].x, points[0].y, midLeftVertexX, bottomVertexY);
-        drawStarPerimeter(points[0].x, points[0].y, midRightVertexX, bottomVertexY);
-
-        // E
-        drawStarPerimeter(points[1].x, points[1].y, leftVertexX, bottomVertexY);
-        drawStarPerimeter(points[1].x, points[1].y, midLeftVertexX, bottomVertexY);
-
-        // D
-        drawStarPerimeter(points[2].x, points[2].y, leftVertexX, topVertexY);
-        drawStarPerimeter(points[2].x, points[2].y, leftVertexX, bottomVertexY);
-
-        // C
-        drawStarPerimeter(points[3].x, points[3].y, leftVertexX, topVertexY);
-        drawStarPerimeter(points[3].x, points[3].y, midLeftVertexX, topVertexY);
-
-        // B
-        drawStarPerimeter(points[4].x, points[4].y, midLeftVertexX, topVertexY);
-        drawStarPerimeter(points[4].x, points[4].y, midRightVertexX, topVertexY);
-
-        // I
-        drawStarPerimeter(points[5].x, points[5].y, midRightVertexX, topVertexY);
-        drawStarPerimeter(points[5].x, points[5].y, rightVertexX, topVertexY);
-
-        // H
-        drawStarPerimeter(points[6].x, points[6].y, rightVertexX, topVertexY);
-        drawStarPerimeter(points[6].x, points[6].y, rightVertexX, bottomVertexY);
-
-        // G
-        drawStarPerimeter(points[7].x, points[7].y, midRightVertexX, bottomVertexY);
-        drawStarPerimeter(points[7].x, points[7].y, rightVertexX, bottomVertexY);
+        drawStarPerimeter(points[0].x, points[0].y, innerPolygon[7].x, innerPolygon[7].y);
+        drawStarPerimeter(points[0].x, points[0].y, innerPolygon[0].x, innerPolygon[0].y);
+        for (var k = 1; k < innerPolygon.length; k++) {
+            drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
+            drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k].x, innerPolygon[k].y);
+        }
     }
 
     for (var j = 0; j < 8; j++) {
-        drawPoint(points[j].x, points[j].y);
+        drawPoint(points[j].x, points[j].y, j % 2 == 0);
     }
 }
 
 function starPoints(relx, rely) {
+    var allPoints = starPointsRegular(relx, rely);
+    var swapPoints = starPointsSwap(relx, rely);
+
+    if (lowerLeftSwap) {
+        allPoints[1] = swapPoints[1];
+    }
+    if (upperLeftSwap) {
+        allPoints[3] = swapPoints[3];
+    }
+    if (upperRightSwap) {
+        allPoints[5] = swapPoints[5];
+    }
+    if (lowerRightSwap) {
+        allPoints[7] = swapPoints[7];
+    }
+
+    return allPoints;
+}
+
+function starPointsRegular(relx, rely) {
     var scaledHeight = height * SCALE;
     var scaledWidth = width * SCALE;
     var scaledLength = length * SCALE;
@@ -234,10 +290,69 @@ function starPoints(relx, rely) {
         {x:center_x+(scaledHeight+scaledWidth)/2+scaledLength+rely, y:center_y+(scaledHeight+scaledWidth)/2-relx}]; // G
 }
 
-function drawPoint(x, y) {
+function starPointsSwap(relx, rely) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+
+    return [{x:center_x + relx, y:center_y + rely + scaledHeight + scaledLength}, // F
+        {x:center_x-(scaledHeight+scaledWidth)/2-rely, y:center_y+(scaledHeight+scaledWidth)/2+scaledLength+relx}, // E
+        {x:center_x-scaledWidth-scaledLength-relx, y:center_y-rely}, //D
+        {x:center_x-(scaledHeight+scaledWidth)/2+rely, y:center_y-(scaledHeight+scaledWidth)/2-scaledLength-relx}, // C
+        {x:center_x+relx, y:center_y-scaledHeight-scaledLength+rely}, // B
+        {x:center_x+(scaledHeight+scaledWidth)/2-rely, y:center_y-(scaledHeight+scaledWidth)/2-scaledLength+relx}, // I
+        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-rely}, // H
+        {x:center_x+(scaledHeight+scaledWidth)/2+rely, y:center_y+(scaledHeight+scaledWidth)/2+scaledLength-relx}]; // G
+}
+
+function wxlPathShorter(x, y) {
+    var Cdist = Math.sqrt(Math.pow(x + width/2, 2) + Math.pow(y+height/2+length,2));
+    var Ddist = Math.sqrt(Math.pow(x + height + length - width/2, 2) + Math.pow(y-height/2,2));
+
+    if (Cdist < Ddist) {
+        return true;
+    }
+    return false;
+}
+
+function setSwapBooleans(x, y) {
+    var regularPoints = starPointsRegular(x,y);
+    var swapPoints = starPointsSwap(x,y);
+
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+
+    // These are some of the vertices of the box
+    var leftVertexX = center_x - scaledWidth/2;
+    var rightVertexX = center_x + scaledWidth/2;
+    var topVertexY = center_y - scaledHeight/2;
+    var bottomVertexY = center_y + scaledHeight/2;
+
+    lowerLeftSwap = distance(swapPoints[1].x, swapPoints[1].y, leftVertexX, bottomVertexY)
+        < distance(regularPoints[1].x, regularPoints[1].y, leftVertexX, bottomVertexY);
+
+    upperLeftSwap = distance(swapPoints[3].x, swapPoints[3].y, leftVertexX, topVertexY)
+        < distance(regularPoints[3].x, regularPoints[3].y, leftVertexX, topVertexY);
+
+    upperRightSwap = distance(swapPoints[5].x, swapPoints[5].y, rightVertexX, topVertexY)
+        < distance(regularPoints[5].x, regularPoints[5].y, rightVertexX, topVertexY);
+
+    lowerRightSwap = distance(swapPoints[7].x, swapPoints[7].y, rightVertexX, bottomVertexY)
+        < distance(regularPoints[7].x, regularPoints[7].y, rightVertexX, bottomVertexY);
+}
+
+function distance(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1,2));
+}
+
+function drawPoint(x, y, dragable) {
     ctx.beginPath();
     ctx.arc(x,y,POINT_RADIUS,0,360);
-    ctx.fillStyle = WHITE;
+    if (dragable) {
+        ctx.fillStyle = WHITE;
+    } else {
+        ctx.fillStyle = BLACK;
+    }
     ctx.strokeStyle = BLACK;
     ctx.lineWidth = 3;
     ctx.fill();
@@ -312,7 +427,7 @@ function fadeEverything(opacity) {
 
 function clickMouse(e) {
     var mousePos = getMousePos(canvas, e);
-    for (var i = 0; i < points.length; i++){
+    for (var i = 0; i < points.length; i += 2){
         if ((mousePos.x >= points[i].x - POINT_RADIUS && mousePos.x <= points[i].x + POINT_RADIUS) &&
             (mousePos.y >= points[i].y - POINT_RADIUS && mousePos.y <= points[i].y + POINT_RADIUS)) {
             mouseIsDown = true;
