@@ -50,8 +50,6 @@ function draw() {
 
     rescale();
 
-    setSwapBooleans(sourceX, sourceY);
-
     if (rectColorsDisp) {
         drawBgRectangles(width, height, length);
     }
@@ -62,6 +60,8 @@ function draw() {
     var maximumy = height*SCALE/2;
     sourceX = Math.max(Math.min(sourceX, maximumx), minimumx);
     sourceY = Math.max(Math.min(sourceY, maximumy), minimumy);
+
+    setSwapBooleans(sourceX, sourceY);
 
     points = starPoints(sourceX, sourceY);
     centerPoints = starPoints(0,0);
