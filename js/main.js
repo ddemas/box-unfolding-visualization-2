@@ -24,6 +24,7 @@ var mouseIsDown = false;
 var selectedPointInd = 0;
 
 var voronoiDiagram = null;
+var voronoiDiagramAll = null;
 
 var fade = 0.5;
 
@@ -198,14 +199,19 @@ function drawSymmetricPointsAndLines(relx, rely) {
     var bbox = {xl: -50, xr: canvas.width + 50, yt: -50, yb: canvas.height + 50};
     try {
         voronoiDiagram = voronoi.compute(points, bbox);
+        voronoiDiagramAll = voronoi.compute(allStarPoints(sourceX, sourceY), bbox);
     } catch(Exception) {
         console.log("oops");
     }
 
     if (voronoiDisp) {
+        for (var i = 0; i < voronoiDiagramAll.edges.length; i++) {
+            var edge = voronoiDiagramAll.edges[i];
+            drawVoronoiLines(edge.va.x, edge.va.y, edge.vb.x, edge.vb.y, "#FF7DF0");
+        }
         for (var i = 0; i < voronoiDiagram.edges.length; i++) {
             var edge = voronoiDiagram.edges[i];
-            drawVoronoiLines(edge.va.x, edge.va.y, edge.vb.x, edge.vb.y);
+            drawVoronoiLines(edge.va.x, edge.va.y, edge.vb.x, edge.vb.y, VORONOI_COLOR);
         }
     }
 
@@ -275,6 +281,19 @@ function starPoints(relx, rely) {
     return allPoints;
 }
 
+function allStarPoints(relx, rely) {
+    var allPoints = starPointsRegular(relx, rely);
+    var swapPoints = starPointsSwap(relx, rely);
+
+    for (var i = 0; i < swapPoints.length; i++) {
+        if (allPoints.indexOf(swapPoints[i])) {
+            allPoints.push(swapPoints[i]);
+        }
+    }
+
+    return allPoints;
+}
+
 function starPointsRegular(relx, rely) {
     var scaledHeight = height * SCALE;
     var scaledWidth = width * SCALE;
@@ -303,16 +322,6 @@ function starPointsSwap(relx, rely) {
         {x:center_x+(scaledHeight+scaledWidth)/2-rely, y:center_y-(scaledHeight+scaledWidth)/2-scaledLength+relx}, // I
         {x:center_x+scaledWidth+scaledLength-relx, y:center_y-rely}, // H
         {x:center_x+(scaledHeight+scaledWidth)/2+rely, y:center_y+(scaledHeight+scaledWidth)/2+scaledLength-relx}]; // G
-}
-
-function wxlPathShorter(x, y) {
-    var Cdist = Math.sqrt(Math.pow(x + width/2, 2) + Math.pow(y+height/2+length,2));
-    var Ddist = Math.sqrt(Math.pow(x + height + length - width/2, 2) + Math.pow(y-height/2,2));
-
-    if (Cdist < Ddist) {
-        return true;
-    }
-    return false;
 }
 
 function setSwapBooleans(x, y) {
@@ -373,11 +382,11 @@ function drawStarPerimeter(x1, y1, x2, y2) {
     perimeter += distance / SCALE;
 }
 
-function drawVoronoiLines(x1, y1, x2, y2) {
+function drawVoronoiLines(x1, y1, x2, y2, color) {
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
-    ctx.strokeStyle = VORONOI_COLOR;
+    ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.closePath();
