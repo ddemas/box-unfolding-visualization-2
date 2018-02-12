@@ -35,9 +35,9 @@ var rectColorsDisp = true;
 var starEdgesDisp = true;
 var fadeDisp = true;
 
-var upperLeftSwap = false;
+var upperLeftShortestFace = "height-length";
 var upperRightSwap = false;
-var lowerLeftSwap = false;
+var lowerLeftShortestFace = "height-length";
 var lowerRightSwap = false;
 
 resizeCanvas();
@@ -124,16 +124,28 @@ function drawBgRectangles(w, h, l) {
     drawRectangle(center_x - scaledWidth/2, center_y - scaledHeight/2 - scaledLength, scaledWidth, scaledLength, W_BY_L_COLOR);
     drawRectangle(center_x - scaledWidth/2, center_y + scaledHeight/2, scaledWidth, scaledLength, W_BY_L_COLOR);
 
-    if (!upperLeftSwap) {
+    if (upperLeftShortestFace === "width-length") {
         drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledHeight,
             center_y - scaledHeight/2 - scaledWidth,
             scaledHeight, scaledWidth, H_BY_W_COLOR);
         drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
-    } else {
+    } else if (upperLeftShortestFace === "height-length") {
         drawRectangle(center_x - scaledWidth/2 - scaledHeight,
             center_y - scaledHeight/2 - scaledWidth - scaledLength,
             scaledHeight, scaledWidth, H_BY_W_COLOR);
         drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y - scaledHeight/2 - scaledLength, scaledHeight, scaledLength, H_BY_L_COLOR);
+    } else if (upperLeftShortestFace === "both-wl-first") {
+        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2 - scaledWidth - scaledHeight, 
+            scaledLength, scaledHeight, H_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledWidth, center_y - scaledHeight/2 - scaledWidth - scaledHeight, 
+            scaledWidth, scaledHeight, H_BY_W_COLOR);
+    } else {
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y - scaledHeight/2 - scaledLength, scaledHeight, scaledLength, H_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight - scaledWidth, center_y - scaledHeight/2 - scaledLength, 
+            scaledWidth, scaledLength, W_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight - scaledWidth, center_y - scaledHeight/2 - scaledLength - scaledHeight, 
+            scaledWidth, scaledHeight, H_BY_W_COLOR);
     }
 
     if (!upperRightSwap) {
@@ -148,16 +160,28 @@ function drawBgRectangles(w, h, l) {
         drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2 - scaledLength, scaledHeight, scaledLength, H_BY_L_COLOR);
     }
 
-    if (!lowerLeftSwap) {
+    if (lowerLeftShortestFace === "width-length") {
         drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledHeight,
             center_y + scaledHeight/2,
             scaledHeight, scaledWidth, H_BY_W_COLOR);
         drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
-    } else {
+    } else if (lowerLeftShortestFace === "height-length") {
         drawRectangle(center_x - scaledWidth/2 - scaledHeight,
             center_y + scaledHeight/2 + scaledLength,
             scaledHeight, scaledWidth, H_BY_W_COLOR);
         drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y + scaledHeight/2, scaledHeight, scaledLength, H_BY_L_COLOR);
+    } else if (upperLeftShortestFace === "both-wl-first") {
+        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y + scaledHeight/2 + scaledWidth, 
+            scaledLength, scaledHeight, H_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledWidth, center_y + scaledHeight/2 + scaledWidth, 
+            scaledWidth, scaledHeight, H_BY_W_COLOR);
+    } else {
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y + scaledHeight/2, scaledHeight, scaledLength, H_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight - scaledWidth, center_y + scaledHeight/2, 
+            scaledWidth, scaledLength, W_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledHeight - scaledWidth, center_y + scaledHeight/2 + scaledLength, 
+            scaledWidth, scaledHeight, H_BY_W_COLOR);
     }
 
     if (!lowerRightSwap) {
@@ -199,16 +223,11 @@ function drawSymmetricPointsAndLines(relx, rely) {
     var bbox = {xl: -50, xr: canvas.width + 50, yt: -50, yb: canvas.height + 50};
     try {
         voronoiDiagram = voronoi.compute(points, bbox);
-        voronoiDiagramAll = voronoi.compute(allStarPoints(sourceX, sourceY), bbox);
     } catch(Exception) {
         console.log("oops");
     }
 
     if (voronoiDisp) {
-        for (var i = 0; i < voronoiDiagramAll.edges.length; i++) {
-            var edge = voronoiDiagramAll.edges[i];
-            drawVoronoiLines(edge.va.x, edge.va.y, edge.vb.x, edge.vb.y, "#FF7DF0");
-        }
         for (var i = 0; i < voronoiDiagram.edges.length; i++) {
             var edge = voronoiDiagram.edges[i];
             drawVoronoiLines(edge.va.x, edge.va.y, edge.vb.x, edge.vb.y, VORONOI_COLOR);
@@ -224,11 +243,11 @@ function drawSymmetricPointsAndLines(relx, rely) {
         {x: rightVertexX, y: bottomVertexY},
         {x: midRightVertexX, y: bottomVertexY}];
 
-    if (lowerLeftSwap) {
+    if (lowerLeftShortestFace === "height-length" || lowerLeftShortestFace === "both-wl-first") {
         innerPolygon[0] = {x: SWAPleftVertexX, y: SWAPbottomVertexY};
         innerPolygon[1] = {x: SWAPleftVertexX, y: SWAPmidBottomVertexY};
     }
-    if (upperLeftSwap) {
+    if (upperLeftShortestFace === "height-length" || upperLeftShortestFace === "both-wl-first") {
         innerPolygon[2] = {x: SWAPleftVertexX, y: SWAPmidTopVertexY};
         innerPolygon[3] = {x: SWAPleftVertexX, y: SWAPtopVertexY};
     }
@@ -264,13 +283,25 @@ function drawSymmetricPointsAndLines(relx, rely) {
 function starPoints(relx, rely) {
     var allPoints = starPointsRegular(relx, rely);
     var swapPoints = starPointsSwap(relx, rely);
+    var hlFirstPoints = starPointsBothHLFirst(relx,rely);
+    var wlFirstPoints = starPointsBothWLFirst(relx,rely);
 
-    if (lowerLeftSwap) {
+    if (lowerLeftShortestFace === "height-length") {
         allPoints[1] = swapPoints[1];
+    } else if(lowerLeftShortestFace === "both-hl-first") {
+        allPoints[1] = hlFirstPoints[1];
+    } else if(lowerLeftShortestFace === "both-wl-first") {
+        allPoints[1] = wlFirstPoints[1];
     }
-    if (upperLeftSwap) {
+
+    if (upperLeftShortestFace === "height-length") {
         allPoints[3] = swapPoints[3];
+    } else if(upperLeftShortestFace === "both-hl-first") {
+        allPoints[3] = hlFirstPoints[3];
+    } else if(upperLeftShortestFace === "both-wl-first") {
+        allPoints[3] = wlFirstPoints[3];
     }
+    
     if (upperRightSwap) {
         allPoints[5] = swapPoints[5];
     }
@@ -324,9 +355,41 @@ function starPointsSwap(relx, rely) {
         {x:center_x+(scaledHeight+scaledWidth)/2+rely, y:center_y+(scaledHeight+scaledWidth)/2+scaledLength-relx}]; // G
 }
 
+function starPointsBothHLFirst(relx, rely) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+
+    return [{x:center_x + relx, y:center_y + rely + scaledHeight + scaledLength},
+        {x:center_x-scaledWidth-scaledHeight-relx, y:center_y+scaledHeight+scaledLength-rely},
+        {x:center_x-scaledWidth-scaledLength-relx, y:center_y-rely}, 
+        {x:center_x-scaledWidth-scaledHeight-relx, y:center_y-scaledHeight-scaledLength-rely},
+        {x:center_x+relx, y:center_y-scaledHeight-scaledLength+rely},
+        {x:center_x+scaledWidth+scaledHeight-relx, y:center_y-scaledHeight-scaledLength-rely},
+        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-rely},
+        {x:center_x+scaledWidth+scaledHeight-relx, y:center_y+scaledHeight+scaledLength+rely}];
+}
+
+function starPointsBothWLFirst(relx, rely) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+
+    return [{x:center_x + relx, y:center_y + rely + scaledHeight + scaledLength}, 
+        {x:center_x-scaledWidth-scaledLength+relx, y:center_y+scaledHeight+scaledWidth+rely}, 
+        {x:center_x-scaledWidth-scaledLength-relx, y:center_y-rely}, 
+        {x:center_x-scaledWidth-scaledLength+relx, y:center_y-scaledHeight-scaledWidth+rely}, 
+        {x:center_x+relx, y:center_y-scaledHeight-scaledLength+rely}, 
+        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-scaledHeight-scaledWidth+rely}, 
+        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-rely}, 
+        {x:center_x+scaledWidth+scaledLength-relx, y:center_y+scaledHeight+scaledWidth-rely}];
+}
+
 function setSwapBooleans(x, y) {
     var regularPoints = starPointsRegular(x,y);
     var swapPoints = starPointsSwap(x,y);
+    var hlFirstPoints = starPointsBothHLFirst(x,y);
+    var wlFirstPoints = starPointsBothWLFirst(x,y);
 
     var scaledHeight = height * SCALE;
     var scaledWidth = width * SCALE;
@@ -337,17 +400,45 @@ function setSwapBooleans(x, y) {
     var topVertexY = center_y - scaledHeight/2;
     var bottomVertexY = center_y + scaledHeight/2;
 
-    lowerLeftSwap = distance(swapPoints[1].x, swapPoints[1].y, leftVertexX, bottomVertexY)
-        < distance(regularPoints[1].x, regularPoints[1].y, leftVertexX, bottomVertexY);
+    var distanceArray = function(index) {
+        return [{
+            name: "width-length",
+            dist: distance(regularPoints[index].x, regularPoints[index].y, leftVertexX, topVertexY)
+        }, {
+            name: "height-length",
+            dist: distance(swapPoints[index].x, swapPoints[index].y, leftVertexX, topVertexY)
+        }, {
+            name: "both-hl-first",
+            dist: distance(hlFirstPoints[index].x, hlFirstPoints[index].y, leftVertexX, topVertexY)
+        }, {
+            name: "both-wl-first",
+            dist: distance(wlFirstPoints[index].x, wlFirstPoints[index].y, leftVertexX, topVertexY)
+        }];
+    }
 
-    upperLeftSwap = distance(swapPoints[3].x, swapPoints[3].y, leftVertexX, topVertexY)
-        < distance(regularPoints[3].x, regularPoints[3].y, leftVertexX, topVertexY);
+    lowerLeftShortestFace = shortestDist(distanceArray(1));
+
+    upperLeftShortestFace = shortestDist(distanceArray(3));
 
     upperRightSwap = distance(swapPoints[5].x, swapPoints[5].y, rightVertexX, topVertexY)
         < distance(regularPoints[5].x, regularPoints[5].y, rightVertexX, topVertexY);
 
     lowerRightSwap = distance(swapPoints[7].x, swapPoints[7].y, rightVertexX, bottomVertexY)
         < distance(regularPoints[7].x, regularPoints[7].y, rightVertexX, bottomVertexY);
+}
+
+function shortestDist(distances) {
+    var min = distances[0].dist;
+    var minName = distances[0].name;
+
+    for (var i = 1; i < distances.length; i++) {
+        if (distances[i].dist < min) {
+            minName = distances[i].name;
+            min = distances[i].dist;
+        }
+    }
+
+    return minName;
 }
 
 function distance(x1, y1, x2, y2) {
