@@ -43,6 +43,10 @@ var lowerRightSwap = false;
 resizeCanvas();
 setInterval(draw, 10);
 
+function negateIfTrue(value, exp) {
+    return (exp ? -1 : 1) * value;
+}
+
 function draw() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
     perimeter = 0;
@@ -105,95 +109,161 @@ function drawBgRectangles(w, h, l) {
     var scaledLength = l * SCALE;
     var scaledHeight = h * SCALE;
 
-    drawRectangle(center_x - scaledWidth/2,center_y - scaledHeight/2, scaledWidth, scaledHeight, H_BY_W_COLOR);
+    var drawMiddleRectangle = function() {
+        drawRectangle(center_x - scaledWidth/2,center_y - scaledHeight/2, scaledWidth, scaledHeight, H_BY_W_COLOR);
+    }
 
-    drawRectangle(center_x - scaledWidth/2,center_y - scaledHeight*3/2 - scaledLength, scaledWidth, scaledHeight, H_BY_W_COLOR);
-    drawRectangle(center_x - scaledWidth/2,center_y + scaledHeight/2 + scaledLength, scaledWidth, scaledHeight, H_BY_W_COLOR);
+    var drawMiddleAdjacentRectangles = function() {
+        drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2, scaledLength, scaledHeight, H_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2, scaledLength, scaledHeight, H_BY_L_COLOR);
 
-    drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledWidth,
-        center_y - scaledHeight/2,
-        scaledWidth, scaledHeight, H_BY_W_COLOR);
+        drawRectangle(center_x - scaledWidth/2, center_y - scaledHeight/2 - scaledLength, scaledWidth, scaledLength, W_BY_L_COLOR);
+        drawRectangle(center_x - scaledWidth/2, center_y + scaledHeight/2, scaledWidth, scaledLength, W_BY_L_COLOR);
+    }
 
-    drawRectangle(center_x + scaledWidth/2 + scaledLength,
-        center_y - scaledHeight/2,
-        scaledWidth, scaledHeight, H_BY_W_COLOR);
+    var drawCrossSourceRectangle = function(isWLAdj, isUpperLeftAdj) {
+        var x = center_x - negateIfTrue(scaledWidth/2, !isWLAdj && !isUpperLeftAdj)
+            + (!isWLAdj ? negateIfTrue(scaledLength, isUpperLeftAdj) : 0)
+            - (!isWLAdj && isUpperLeftAdj ? scaledWidth : 0);
+        var y = center_y - negateIfTrue(scaledHeight/2, isWLAdj && !isUpperLeftAdj) 
+            + (isWLAdj ? negateIfTrue(scaledLength, isUpperLeftAdj) : 0)
+            - (isWLAdj && isUpperLeftAdj ? scaledHeight : 0);
+        drawRectangle(x, y, scaledWidth, scaledHeight, H_BY_W_COLOR);
+    }
 
-    drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2, scaledLength, scaledHeight, H_BY_L_COLOR);
-    drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2, scaledLength, scaledHeight, H_BY_L_COLOR);
+    var drawHLAdjSourceFace = function(isLeft, isTop) {
+        var x = center_x + negateIfTrue(scaledWidth/2, isLeft)
+            - (isLeft ? scaledHeight : 0);
+        var y = center_y + negateIfTrue(scaledHeight/2, isTop) + negateIfTrue(scaledLength, isTop)
+            - (isTop ? scaledWidth : 0);
+        drawRectangle(x, y, scaledHeight, scaledWidth, H_BY_W_COLOR);
+    }
 
-    drawRectangle(center_x - scaledWidth/2, center_y - scaledHeight/2 - scaledLength, scaledWidth, scaledLength, W_BY_L_COLOR);
-    drawRectangle(center_x - scaledWidth/2, center_y + scaledHeight/2, scaledWidth, scaledLength, W_BY_L_COLOR);
+    var drawWLAdjSourceFace = function(isLeft, isTop) {
+        var x = center_x + negateIfTrue(scaledWidth/2, isLeft) + negateIfTrue(scaledLength, isLeft)
+            - (isLeft ? scaledHeight : 0);
+        var y = center_y + negateIfTrue(scaledHeight/2, isTop)
+            - (isTop ? scaledWidth : 0);
+        drawRectangle(x, y, scaledHeight, scaledWidth, H_BY_W_COLOR);
+    }
+
+    var drawCornerHLFace = function(isLeft, isTop) {
+        var x = center_x + negateIfTrue(scaledWidth/2, isLeft)
+            - (isLeft ? scaledHeight : 0);
+        var y = center_y + negateIfTrue(scaledHeight/2, isTop)
+            - (isTop ? scaledLength : 0);
+        drawRectangle(x, y, scaledHeight, scaledLength, H_BY_L_COLOR);
+    }
+
+    var drawCornerWLFace = function(isLeft, isTop) {
+        var x = center_x + negateIfTrue(scaledWidth/2, isLeft)
+            - (isLeft ? scaledLength : 0);
+        var y = center_y + negateIfTrue(scaledHeight/2, isTop)
+            - (isTop ? scaledWidth : 0);
+        drawRectangle(x, y, scaledLength, scaledWidth, W_BY_L_COLOR);
+    }
+
+    var drawNextCornerHLFace = function(isLeft, isTop) {
+        var x = center_x + negateIfTrue(scaledWidth/2, isLeft)
+            - (isLeft ? scaledLength : 0);
+        var y = center_y + negateIfTrue(scaledHeight/2, isTop)
+            + negateIfTrue(scaledWidth, isTop)
+            - (isTop ? scaledHeight : 0);
+        drawRectangle(x, y, scaledLength, scaledHeight, H_BY_L_COLOR);
+    }
+
+    var drawNextCornerWLFace = function(isLeft, isTop) {
+        var x = center_x + negateIfTrue(scaledWidth/2, isLeft)
+            + negateIfTrue(scaledHeight, isLeft)
+            - (isLeft ? scaledWidth : 0);
+        var y = center_y + negateIfTrue(scaledHeight/2, isTop)
+            - (isTop ? scaledLength : 0);
+        drawRectangle(x, y, scaledWidth, scaledLength, W_BY_L_COLOR);
+    }
+
+    var drawFarSourceFaceHLFirst = function(isLeft, isTop) {
+        var x = center_x + negateIfTrue(scaledWidth/2, isLeft)
+            + negateIfTrue(scaledHeight, isLeft)
+            - (isLeft ? scaledWidth : 0);
+        var y = center_y + negateIfTrue(scaledHeight/2, isTop)
+            + negateIfTrue(scaledLength, isTop)
+            - (isTop ? scaledHeight : 0);
+        drawRectangle(x, y, scaledWidth, scaledHeight, H_BY_W_COLOR);
+    }
+
+    var drawFarSourceFaceWLFirst = function(isLeft, isTop) {
+        var x = center_x + negateIfTrue(scaledWidth/2, isLeft)
+            + negateIfTrue(scaledLength, isLeft)
+            - (isLeft ? scaledWidth : 0);
+        var y = center_y + negateIfTrue(scaledHeight/2, isTop)
+            + negateIfTrue(scaledWidth, isTop)
+            - (isTop ? scaledHeight : 0);
+        drawRectangle(x, y, scaledWidth, scaledHeight, H_BY_W_COLOR);
+    }
+
+    var drawCrossRectangles = function() {
+        drawMiddleRectangle();
+        drawMiddleAdjacentRectangles();
+        if (upperLeftShortestFace !== "both-hl-first" && lowerLeftShortestFace !== "both-wl-first") {
+            drawCrossSourceRectangle(false, true);
+        }
+        drawCrossSourceRectangle(true, false);
+        drawCrossSourceRectangle(true, true);
+        drawCrossSourceRectangle(false, false);
+    }
+
+    drawCrossRectangles();
 
     if (upperLeftShortestFace === "width-length") {
-        drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledHeight,
-            center_y - scaledHeight/2 - scaledWidth,
-            scaledHeight, scaledWidth, H_BY_W_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
+        drawWLAdjSourceFace(true, true);
+        drawCornerWLFace(true, true);
     } else if (upperLeftShortestFace === "height-length") {
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight,
-            center_y - scaledHeight/2 - scaledWidth - scaledLength,
-            scaledHeight, scaledWidth, H_BY_W_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y - scaledHeight/2 - scaledLength, scaledHeight, scaledLength, H_BY_L_COLOR);
+        drawHLAdjSourceFace(true, true);
+        drawCornerHLFace(true, true);
     } else if (upperLeftShortestFace === "both-wl-first") {
-        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y - scaledHeight/2 - scaledWidth - scaledHeight, 
-            scaledLength, scaledHeight, H_BY_L_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledWidth, center_y - scaledHeight/2 - scaledWidth - scaledHeight, 
-            scaledWidth, scaledHeight, H_BY_W_COLOR);
+        drawCornerWLFace(true, true);
+        drawNextCornerHLFace(true, true);
+        drawFarSourceFaceWLFirst(true, true);
+        drawWLAdjSourceFace(true, true);
     } else {
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y - scaledHeight/2 - scaledLength, scaledHeight, scaledLength, H_BY_L_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight - scaledWidth, center_y - scaledHeight/2 - scaledLength, 
-            scaledWidth, scaledLength, W_BY_L_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight - scaledWidth, center_y - scaledHeight/2 - scaledLength - scaledHeight, 
-            scaledWidth, scaledHeight, H_BY_W_COLOR);
+        drawCornerHLFace(true, true);
+        drawNextCornerWLFace(true, true);
+        drawFarSourceFaceHLFirst(true, true);
+        drawHLAdjSourceFace(true, true);
     }
 
     if (!upperRightSwap) {
-        drawRectangle(center_x + scaledWidth/2 + scaledLength,
-            center_y - scaledHeight/2 - scaledWidth,
-            scaledHeight, scaledWidth, H_BY_W_COLOR);
-        drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2 - scaledWidth, scaledLength, scaledWidth, W_BY_L_COLOR);
+        drawWLAdjSourceFace(false, true);
+        drawCornerWLFace(false, true);
     } else {
-        drawRectangle(center_x + scaledWidth/2,
-            center_y - scaledHeight/2 - scaledWidth - scaledLength,
-            scaledHeight, scaledWidth, H_BY_W_COLOR);
-        drawRectangle(center_x + scaledWidth/2, center_y - scaledHeight/2 - scaledLength, scaledHeight, scaledLength, H_BY_L_COLOR);
+        drawHLAdjSourceFace(false, true);
+        drawCornerHLFace(false, true);
     }
 
     if (lowerLeftShortestFace === "width-length") {
-        drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledHeight,
-            center_y + scaledHeight/2,
-            scaledHeight, scaledWidth, H_BY_W_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
+        drawWLAdjSourceFace(true, false);
+        drawCornerWLFace(true, false);
     } else if (lowerLeftShortestFace === "height-length") {
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight,
-            center_y + scaledHeight/2 + scaledLength,
-            scaledHeight, scaledWidth, H_BY_W_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y + scaledHeight/2, scaledHeight, scaledLength, H_BY_L_COLOR);
+        drawHLAdjSourceFace(true, false);
+        drawCornerHLFace(true, false);
     } else if (upperLeftShortestFace === "both-wl-first") {
-        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledLength, center_y + scaledHeight/2 + scaledWidth, 
-            scaledLength, scaledHeight, H_BY_L_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledLength - scaledWidth, center_y + scaledHeight/2 + scaledWidth, 
-            scaledWidth, scaledHeight, H_BY_W_COLOR);
+        drawCornerWLFace(true, false);
+        drawNextCornerHLFace(true, false);
+        drawFarSourceFaceWLFirst(true, false);
+        drawWLAdjSourceFace(true, false);
     } else {
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight, center_y + scaledHeight/2, scaledHeight, scaledLength, H_BY_L_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight - scaledWidth, center_y + scaledHeight/2, 
-            scaledWidth, scaledLength, W_BY_L_COLOR);
-        drawRectangle(center_x - scaledWidth/2 - scaledHeight - scaledWidth, center_y + scaledHeight/2 + scaledLength, 
-            scaledWidth, scaledHeight, H_BY_W_COLOR);
+        drawCornerHLFace(true, false);
+        drawNextCornerWLFace(true, false);
+        drawFarSourceFaceHLFirst(true, false);
+        drawHLAdjSourceFace(true, false);
     }
 
     if (!lowerRightSwap) {
-        drawRectangle(center_x + scaledWidth/2 + scaledLength,
-            center_y + scaledHeight/2,
-            scaledHeight, scaledWidth, H_BY_W_COLOR);
-        drawRectangle(center_x + scaledWidth/2, center_y + scaledHeight/2, scaledLength, scaledWidth, W_BY_L_COLOR);
+        drawWLAdjSourceFace(false, false);
+        drawCornerWLFace(false, false);
     } else {
-        drawRectangle(center_x + scaledWidth/2,
-            center_y + scaledHeight/2 + scaledLength,
-            scaledHeight, scaledWidth, H_BY_W_COLOR);
-        drawRectangle(center_x + scaledWidth/2, center_y + scaledHeight/2, scaledHeight, scaledLength, H_BY_L_COLOR);
+        drawHLAdjSourceFace(false, false);
+        drawCornerHLFace(false, false);
     }
 
 }
@@ -267,7 +337,7 @@ function drawSymmetricPointsAndLines(relx, rely) {
     }
 
     if (starEdgesDisp) {
-        drawStarPerimeter(points[0].x, points[0].y, innerPolygon[7].x, innerPolygon[7].y);
+        drawStarPerimeter(points[0].x, points[0].y, innerPolygon[innerPolygon.length-1].x, innerPolygon[innerPolygon.length-1].y);
         drawStarPerimeter(points[0].x, points[0].y, innerPolygon[0].x, innerPolygon[0].y);
         for (var k = 1; k < innerPolygon.length; k++) {
             drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
@@ -312,17 +382,11 @@ function starPoints(relx, rely) {
     return allPoints;
 }
 
-function allStarPoints(relx, rely) {
-    var allPoints = starPointsRegular(relx, rely);
-    var swapPoints = starPointsSwap(relx, rely);
-
-    for (var i = 0; i < swapPoints.length; i++) {
-        if (allPoints.indexOf(swapPoints[i])) {
-            allPoints.push(swapPoints[i]);
-        }
+function sourcePoint(relx, rely, boxCenterX, boxCenterY, shouldInvert) {
+    return {
+        x: boxCenter + negateIfTrue(relx, shouldInvert),
+        y: boxCenter + negateIfTrue(rely, shouldInvert)
     }
-
-    return allPoints;
 }
 
 function starPointsRegular(relx, rely) {
