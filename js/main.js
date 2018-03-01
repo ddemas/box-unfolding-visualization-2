@@ -21,7 +21,9 @@ var points = starPoints(sourceX, sourceY);
 var centerPoints = starPoints(0,0);
 
 var mouseIsDown = false;
-var selectedPointInd = 0;
+var selectedPoint = {};
+selectedRectangleCenterX = 0;
+selectedRectangleCenterY = 0;
 
 var voronoiDiagram = null;
 var voronoiDiagramAll = null;
@@ -36,9 +38,9 @@ var starEdgesDisp = true;
 var fadeDisp = true;
 
 var upperLeftShortestFace = "height-length";
-var upperRightSwap = false;
+var upperRightShortestFace = "height-length";
 var lowerLeftShortestFace = "height-length";
-var lowerRightSwap = false;
+var lowerRightShortestFace = "height-length";
 
 resizeCanvas();
 setInterval(draw, 10);
@@ -85,7 +87,7 @@ function resizeCanvas() {
 
 function rescale() {
     var totalWidth = Math.max(width*3 + length*2, width + 2*height + 2*length);
-    var totalHeight = Math.max(height*3 + length*2, width*2 + height);
+    var totalHeight = Math.max(height*3 + length*2, width*2 + height + 2*length);
     // if(!more_wxl_faces) {
     //     totalWidth = Math.max(width*3 + length*2, width + 2*height);
     //     totalHeight = Math.max(height*3 + length*2, width*2 + length*2 + height);
@@ -204,68 +206,46 @@ function drawBgRectangles(w, h, l) {
     var drawCrossRectangles = function() {
         drawMiddleRectangle();
         drawMiddleAdjacentRectangles();
-        if (upperLeftShortestFace !== "both-hl-first" && lowerLeftShortestFace !== "both-wl-first") {
+        if (displayLeftBox()) {
             drawCrossSourceRectangle(false, true);
         }
-        drawCrossSourceRectangle(true, false);
-        drawCrossSourceRectangle(true, true);
-        drawCrossSourceRectangle(false, false);
+        if (displayTopBox()) {
+            drawCrossSourceRectangle(true, true);
+        }
+        if (displayRightBox()) {
+            drawCrossSourceRectangle(false, false);
+        }
+        if (displayBottomBox()) {
+            drawCrossSourceRectangle(true, false);
+        }
     }
 
     drawCrossRectangles();
 
-    if (upperLeftShortestFace === "width-length") {
-        drawWLAdjSourceFace(true, true);
-        drawCornerWLFace(true, true);
-    } else if (upperLeftShortestFace === "height-length") {
-        drawHLAdjSourceFace(true, true);
-        drawCornerHLFace(true, true);
-    } else if (upperLeftShortestFace === "both-wl-first") {
-        drawCornerWLFace(true, true);
-        drawNextCornerHLFace(true, true);
-        drawFarSourceFaceWLFirst(true, true);
-        drawWLAdjSourceFace(true, true);
-    } else {
-        drawCornerHLFace(true, true);
-        drawNextCornerWLFace(true, true);
-        drawFarSourceFaceHLFirst(true, true);
-        drawHLAdjSourceFace(true, true);
+    var drawCornerRectangles = function(isLeft, isTop, shortestFace) {
+        if (shortestFace === "width-length") {
+            drawWLAdjSourceFace(isLeft, isTop);
+            drawCornerWLFace(isLeft, isTop);
+        } else if (shortestFace === "height-length") {
+            drawHLAdjSourceFace(isLeft, isTop);
+            drawCornerHLFace(isLeft, isTop);
+        } else if (shortestFace === "both-wl-first") {
+            drawCornerWLFace(isLeft, isTop);
+            drawNextCornerHLFace(isLeft, isTop);
+            drawFarSourceFaceWLFirst(isLeft, isTop);
+            drawWLAdjSourceFace(isLeft, isTop);
+        } else {
+            drawCornerHLFace(isLeft, isTop);
+            drawNextCornerWLFace(isLeft, isTop);
+            drawFarSourceFaceHLFirst(isLeft, isTop);
+            drawHLAdjSourceFace(isLeft, isTop);
+        }
     }
 
-    if (!upperRightSwap) {
-        drawWLAdjSourceFace(false, true);
-        drawCornerWLFace(false, true);
-    } else {
-        drawHLAdjSourceFace(false, true);
-        drawCornerHLFace(false, true);
-    }
-
-    if (lowerLeftShortestFace === "width-length") {
-        drawWLAdjSourceFace(true, false);
-        drawCornerWLFace(true, false);
-    } else if (lowerLeftShortestFace === "height-length") {
-        drawHLAdjSourceFace(true, false);
-        drawCornerHLFace(true, false);
-    } else if (upperLeftShortestFace === "both-wl-first") {
-        drawCornerWLFace(true, false);
-        drawNextCornerHLFace(true, false);
-        drawFarSourceFaceWLFirst(true, false);
-        drawWLAdjSourceFace(true, false);
-    } else {
-        drawCornerHLFace(true, false);
-        drawNextCornerWLFace(true, false);
-        drawFarSourceFaceHLFirst(true, false);
-        drawHLAdjSourceFace(true, false);
-    }
-
-    if (!lowerRightSwap) {
-        drawWLAdjSourceFace(false, false);
-        drawCornerWLFace(false, false);
-    } else {
-        drawHLAdjSourceFace(false, false);
-        drawCornerHLFace(false, false);
-    }
-
+    drawCornerRectangles(true, true, upperLeftShortestFace);
+    drawCornerRectangles(false, true, upperRightShortestFace);
+    drawCornerRectangles(true, false, lowerLeftShortestFace);
+    drawCornerRectangles(false, false, lowerRightShortestFace);
 }
 
 function drawSymmetricPointsAndLines(relx, rely) {
@@ -304,157 +284,200 @@ function drawSymmetricPointsAndLines(relx, rely) {
         }
     }
 
-    var innerPolygon = [{x: midLeftVertexX, y: bottomVertexY},
-        {x: leftVertexX, y: bottomVertexY},
-        {x: leftVertexX, y: topVertexY},
-        {x: midLeftVertexX, y: topVertexY},
-        {x: midRightVertexX, y: topVertexY},
-        {x: rightVertexX, y: topVertexY},
-        {x: rightVertexX, y: bottomVertexY},
-        {x: midRightVertexX, y: bottomVertexY}];
+    // var innerPolygon = [{x: midLeftVertexX, y: bottomVertexY},
+    //     {x: leftVertexX, y: bottomVertexY},
+    //     {x: leftVertexX, y: topVertexY},
+    //     {x: midLeftVertexX, y: topVertexY},
+    //     {x: midRightVertexX, y: topVertexY},
+    //     {x: rightVertexX, y: topVertexY},
+    //     {x: rightVertexX, y: bottomVertexY},
+    //     {x: midRightVertexX, y: bottomVertexY}];
 
-    if (lowerLeftShortestFace === "height-length" || lowerLeftShortestFace === "both-wl-first") {
-        innerPolygon[0] = {x: SWAPleftVertexX, y: SWAPbottomVertexY};
-        innerPolygon[1] = {x: SWAPleftVertexX, y: SWAPmidBottomVertexY};
-    }
-    if (upperLeftShortestFace === "height-length" || upperLeftShortestFace === "both-wl-first") {
-        innerPolygon[2] = {x: SWAPleftVertexX, y: SWAPmidTopVertexY};
-        innerPolygon[3] = {x: SWAPleftVertexX, y: SWAPtopVertexY};
-    }
-    if (upperRightSwap) {
-        innerPolygon[4] = {x: SWAPrightVertexX, y: SWAPtopVertexY};
-        innerPolygon[5] = {x: SWAPrightVertexX, y: SWAPmidTopVertexY};
-    }
-    if (lowerRightSwap) {
-        innerPolygon[6] = {x: SWAPrightVertexX, y: SWAPmidBottomVertexY};
-        innerPolygon[7] = {x: SWAPrightVertexX, y: SWAPbottomVertexY};
-    }
+    // if (lowerLeftShortestFace === "height-length" || lowerLeftShortestFace === "both-wl-first") {
+    //     innerPolygon[0] = {x: SWAPleftVertexX, y: SWAPbottomVertexY};
+    //     innerPolygon[1] = {x: SWAPleftVertexX, y: SWAPmidBottomVertexY};
+    // }
+    // if (upperLeftShortestFace === "height-length" || upperLeftShortestFace === "both-wl-first") {
+    //     innerPolygon[2] = {x: SWAPleftVertexX, y: SWAPmidTopVertexY};
+    //     innerPolygon[3] = {x: SWAPleftVertexX, y: SWAPtopVertexY};
+    // }
+    // if (upperRightShortestFace === "height-length" || upperRightShortestFace === "both-wl-first") {
+    //     innerPolygon[4] = {x: SWAPrightVertexX, y: SWAPtopVertexY};
+    //     innerPolygon[5] = {x: SWAPrightVertexX, y: SWAPmidTopVertexY};
+    // }
+    // if (lowerLeftShortestFace === "height-length" || lowerLeftShortestFace === "both-wl-first") {
+    //     innerPolygon[6] = {x: SWAPrightVertexX, y: SWAPmidBottomVertexY};
+    //     innerPolygon[7] = {x: SWAPrightVertexX, y: SWAPbottomVertexY};
+    // }
 
-    if (fadeDisp && starEdgesDisp) {
-        fadeOutside(points, innerPolygon, fade);
-    } else if (fadeDisp) {
-        fadeEverything(fade);
-    }
+    // if (fadeDisp && starEdgesDisp) {
+    //     fadeOutside(points, innerPolygon, fade);
+    // } else if (fadeDisp) {
+    //     fadeEverything(fade);
+    // }
 
-    if (starEdgesDisp) {
-        drawStarPerimeter(points[0].x, points[0].y, innerPolygon[innerPolygon.length-1].x, innerPolygon[innerPolygon.length-1].y);
-        drawStarPerimeter(points[0].x, points[0].y, innerPolygon[0].x, innerPolygon[0].y);
-        for (var k = 1; k < innerPolygon.length; k++) {
-            drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
-            drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k].x, innerPolygon[k].y);
+    // if (starEdgesDisp) {
+    //     drawStarPerimeter(points[0].x, points[0].y, innerPolygon[innerPolygon.length-1].x, innerPolygon[innerPolygon.length-1].y);
+    //     drawStarPerimeter(points[0].x, points[0].y, innerPolygon[0].x, innerPolygon[0].y);
+    //     for (var k = 1; k < innerPolygon.length; k++) {
+    //         drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
+    //         drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k].x, innerPolygon[k].y);
+    //     }
+    // }
+
+    for (var j = 0; j < points.length; j++) {
+        drawPoint(points[j].x, points[j].y, points[j].dragable);
+    }
+}
+
+function displayTopBox() {
+    return upperRightShortestFace !== "both-wl-first" && upperLeftShortestFace !== "both-wl-first";
+}
+
+function displayBottomBox() {
+    return lowerLeftShortestFace !== "both-wl-first" && lowerRightShortestFace !== "both-wl-first";
+}
+
+function displayLeftBox() {
+    return upperLeftShortestFace !== "both-hl-first" && lowerLeftShortestFace !== "both-hl-first";
+}
+
+function displayRightBox() {
+    return lowerRightShortestFace !== "both-hl-first" && upperRightShortestFace !== "both-hl-first";
+}
+ 
+function starPoints(relx, rely) {
+    var pointArray = [];
+
+    if (displayBottomBox()) {
+        pointArray.push(crossSourcePoint(relx, rely, false, false));
+    }
+    pointArray = pointArray.concat(calcStarVertices(relx, rely, true, false, lowerLeftShortestFace));
+    if (displayLeftBox()) {
+        pointArray.push(crossSourcePoint(relx, rely, true, true));
+    }
+    pointArray = pointArray.concat(calcStarVertices(relx, rely, true, true, upperLeftShortestFace));
+    if (displayTopBox()) {
+        pointArray.push(crossSourcePoint(relx, rely, true, false));
+    }
+    pointArray = pointArray.concat(calcStarVertices(relx, rely, false, true, upperRightShortestFace));
+    if (displayRightBox()) {
+        pointArray.push(crossSourcePoint(relx, rely, false, true));
+    }
+    pointArray = pointArray.concat(calcStarVertices(relx, rely, false, false, lowerRightShortestFace));
+
+    return pointArray;
+}
+
+function crossSourcePoint(relx, rely, isUpperLeftAdj, isOnHorizAxis) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+
+    var point = sourcePoint(relx, rely,
+        center_x + (isOnHorizAxis ? negateIfTrue(scaledWidth + scaledLength, isUpperLeftAdj) : 0),
+        center_y + (!isOnHorizAxis ? negateIfTrue(scaledHeight + scaledLength, isUpperLeftAdj) : 0),
+        isOnHorizAxis, isOnHorizAxis,
+        false);
+
+    point.dragable = true;
+    point.shouldInvertXY = isOnHorizAxis;
+    return point;
+}
+
+function calcStarVertices(relx, rely, isLeft, isTop, shortestFace) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+    var pointArray = [];
+
+    if (shortestFace === "height-length" || shortestFace === "both-hl-first") {
+        var firstPoint, secondPoint;
+        firstPoint = sourcePointHLFirst(relx, rely, isLeft, isTop);
+        if (shortestFace === "both-hl-first") {
+            secondPoint = sourcePointBothHLFirst(relx, rely, isLeft, isTop);
+
+            if (isLeft !== isTop) {
+                pointArray.push(firstPoint);
+                pointArray.push(secondPoint);
+            } else {
+                pointArray.push(secondPoint);
+                pointArray.push(firstPoint);
+            }
+        } else {
+            pointArray.push(firstPoint);
         }
     }
 
-    for (var j = 0; j < 8; j++) {
-        drawPoint(points[j].x, points[j].y, j % 2 == 0);
+    else if (shortestFace === "width-length" || shortestFace === "both-wl-first") {
+        var firstPoint, secondPoint;
+        firstPoint = sourcePointWLFirst(relx, rely, isLeft, isTop);
+        if (shortestFace === "both-wl-first") {
+            secondPoint = sourcePointBothWLFirst(relx, rely, isLeft, isTop);
+
+            if (isLeft !== isTop) {
+                pointArray.push(secondPoint);
+                pointArray.push(firstPoint);
+            } else {
+                pointArray.push(firstPoint);
+                pointArray.push(secondPoint);
+            }
+        } else {
+            pointArray.push(firstPoint);
+        }
     }
+
+    return pointArray;
 }
 
-function starPoints(relx, rely) {
-    var allPoints = starPointsRegular(relx, rely);
-    var swapPoints = starPointsSwap(relx, rely);
-    var hlFirstPoints = starPointsBothHLFirst(relx,rely);
-    var wlFirstPoints = starPointsBothWLFirst(relx,rely);
-
-    if (lowerLeftShortestFace === "height-length") {
-        allPoints[1] = swapPoints[1];
-    } else if(lowerLeftShortestFace === "both-hl-first") {
-        allPoints[1] = hlFirstPoints[1];
-    } else if(lowerLeftShortestFace === "both-wl-first") {
-        allPoints[1] = wlFirstPoints[1];
-    }
-
-    if (upperLeftShortestFace === "height-length") {
-        allPoints[3] = swapPoints[3];
-    } else if(upperLeftShortestFace === "both-hl-first") {
-        allPoints[3] = hlFirstPoints[3];
-    } else if(upperLeftShortestFace === "both-wl-first") {
-        allPoints[3] = wlFirstPoints[3];
-    }
-    
-    if (upperRightSwap) {
-        allPoints[5] = swapPoints[5];
-    }
-    if (lowerRightSwap) {
-        allPoints[7] = swapPoints[7];
-    }
-
-    return allPoints;
+function sourcePointHLFirst(relx, rely, isLeft, isTop) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+    return (sourcePoint(relx, rely, 
+            center_x + negateIfTrue(scaledWidth/2 + scaledHeight/2, isLeft),
+            center_y + negateIfTrue(scaledHeight/2 + scaledLength + scaledWidth/2, isTop),
+            isLeft !== isTop, isLeft === isTop, true));
 }
 
-function sourcePoint(relx, rely, boxCenterX, boxCenterY, shouldInvert) {
+function sourcePointWLFirst(relx, rely, isLeft, isTop) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+    return (sourcePoint(relx, rely, 
+            center_x + negateIfTrue(scaledWidth/2 + scaledHeight/2 + scaledLength, isLeft),
+            center_y + negateIfTrue(scaledHeight/2 + scaledWidth/2, isTop),
+            isLeft !== isTop, isLeft === isTop, true));
+}
+
+function sourcePointBothHLFirst(relx, rely, isLeft, isTop) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+    return (sourcePoint(relx, rely, 
+            center_x + negateIfTrue(scaledWidth + scaledHeight, isLeft),
+            center_y + negateIfTrue(scaledLength + scaledHeight, isTop),
+            true, true, false));
+}
+
+function sourcePointBothWLFirst(relx, rely, isLeft, isTop) {
+    var scaledHeight = height * SCALE;
+    var scaledWidth = width * SCALE;
+    var scaledLength = length * SCALE;
+    return (sourcePoint(relx, rely, 
+            center_x + negateIfTrue(scaledWidth + scaledLength, isLeft),
+            center_y + negateIfTrue(scaledWidth + scaledHeight, isTop),
+            false, false, false));
+}
+
+function sourcePoint(relx, rely, boxCenterX, boxCenterY, shouldInvertX, shouldInvertY, shouldSwitchXY) {
     return {
-        x: boxCenter + negateIfTrue(relx, shouldInvert),
-        y: boxCenter + negateIfTrue(rely, shouldInvert)
+        x: boxCenterX + negateIfTrue(shouldSwitchXY ? rely : relx, shouldInvertX),
+        y: boxCenterY + negateIfTrue(shouldSwitchXY ? relx : rely, shouldInvertY)
     }
-}
-
-function starPointsRegular(relx, rely) {
-    var scaledHeight = height * SCALE;
-    var scaledWidth = width * SCALE;
-    var scaledLength = length * SCALE;
-
-    return [{x:center_x + relx, y:center_y + rely + scaledHeight + scaledLength}, // F
-        {x:center_x-(scaledHeight+scaledWidth)/2-scaledLength-rely, y:center_y+(scaledHeight+scaledWidth)/2+relx}, // E
-        {x:center_x-scaledWidth-scaledLength-relx, y:center_y-rely}, //D
-        {x:center_x-(scaledHeight+scaledWidth)/2-scaledLength+rely, y:center_y-(scaledHeight+scaledWidth)/2-relx}, // C
-        {x:center_x+relx, y:center_y-scaledHeight-scaledLength+rely}, // B
-        {x:center_x+(scaledHeight+scaledWidth)/2+scaledLength-rely, y:center_y-(scaledHeight+scaledWidth)/2+relx}, // I
-        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-rely}, // H
-        {x:center_x+(scaledHeight+scaledWidth)/2+scaledLength+rely, y:center_y+(scaledHeight+scaledWidth)/2-relx}]; // G
-}
-
-function starPointsSwap(relx, rely) {
-    var scaledHeight = height * SCALE;
-    var scaledWidth = width * SCALE;
-    var scaledLength = length * SCALE;
-
-    return [{x:center_x + relx, y:center_y + rely + scaledHeight + scaledLength}, // F
-        {x:center_x-(scaledHeight+scaledWidth)/2-rely, y:center_y+(scaledHeight+scaledWidth)/2+scaledLength+relx}, // E
-        {x:center_x-scaledWidth-scaledLength-relx, y:center_y-rely}, //D
-        {x:center_x-(scaledHeight+scaledWidth)/2+rely, y:center_y-(scaledHeight+scaledWidth)/2-scaledLength-relx}, // C
-        {x:center_x+relx, y:center_y-scaledHeight-scaledLength+rely}, // B
-        {x:center_x+(scaledHeight+scaledWidth)/2-rely, y:center_y-(scaledHeight+scaledWidth)/2-scaledLength+relx}, // I
-        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-rely}, // H
-        {x:center_x+(scaledHeight+scaledWidth)/2+rely, y:center_y+(scaledHeight+scaledWidth)/2+scaledLength-relx}]; // G
-}
-
-function starPointsBothHLFirst(relx, rely) {
-    var scaledHeight = height * SCALE;
-    var scaledWidth = width * SCALE;
-    var scaledLength = length * SCALE;
-
-    return [{x:center_x + relx, y:center_y + rely + scaledHeight + scaledLength},
-        {x:center_x-scaledWidth-scaledHeight-relx, y:center_y+scaledHeight+scaledLength-rely},
-        {x:center_x-scaledWidth-scaledLength-relx, y:center_y-rely}, 
-        {x:center_x-scaledWidth-scaledHeight-relx, y:center_y-scaledHeight-scaledLength-rely},
-        {x:center_x+relx, y:center_y-scaledHeight-scaledLength+rely},
-        {x:center_x+scaledWidth+scaledHeight-relx, y:center_y-scaledHeight-scaledLength-rely},
-        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-rely},
-        {x:center_x+scaledWidth+scaledHeight-relx, y:center_y+scaledHeight+scaledLength+rely}];
-}
-
-function starPointsBothWLFirst(relx, rely) {
-    var scaledHeight = height * SCALE;
-    var scaledWidth = width * SCALE;
-    var scaledLength = length * SCALE;
-
-    return [{x:center_x + relx, y:center_y + rely + scaledHeight + scaledLength}, 
-        {x:center_x-scaledWidth-scaledLength+relx, y:center_y+scaledHeight+scaledWidth+rely}, 
-        {x:center_x-scaledWidth-scaledLength-relx, y:center_y-rely}, 
-        {x:center_x-scaledWidth-scaledLength+relx, y:center_y-scaledHeight-scaledWidth+rely}, 
-        {x:center_x+relx, y:center_y-scaledHeight-scaledLength+rely}, 
-        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-scaledHeight-scaledWidth+rely}, 
-        {x:center_x+scaledWidth+scaledLength-relx, y:center_y-rely}, 
-        {x:center_x+scaledWidth+scaledLength-relx, y:center_y+scaledHeight+scaledWidth-rely}];
 }
 
 function setSwapBooleans(x, y) {
-    var regularPoints = starPointsRegular(x,y);
-    var swapPoints = starPointsSwap(x,y);
-    var hlFirstPoints = starPointsBothHLFirst(x,y);
-    var wlFirstPoints = starPointsBothWLFirst(x,y);
-
     var scaledHeight = height * SCALE;
     var scaledWidth = width * SCALE;
 
@@ -464,31 +487,39 @@ function setSwapBooleans(x, y) {
     var topVertexY = center_y - scaledHeight/2;
     var bottomVertexY = center_y + scaledHeight/2;
 
-    var distanceArray = function(index) {
+    var distanceArray = function(isLeft, isTop) {
+        var hlFirstPoint = sourcePointHLFirst(x, y, isLeft, isTop);
+        var wlFirstPoint = sourcePointWLFirst(x, y, isLeft, isTop);
+        var bothHLFirstPoint = sourcePointBothHLFirst(x, y, isLeft, isTop);
+        var bothWLFirstPoint = sourcePointBothWLFirst(x, y, isLeft, isTop);
+
+        comparePoint = {
+            x: isLeft ? leftVertexX : rightVertexX,
+            y: isTop ? topVertexY : bottomVertexY
+        }
+
         return [{
             name: "width-length",
-            dist: distance(regularPoints[index].x, regularPoints[index].y, leftVertexX, topVertexY)
+            dist: distance(wlFirstPoint.x, wlFirstPoint.y, comparePoint.x, comparePoint.y)
         }, {
             name: "height-length",
-            dist: distance(swapPoints[index].x, swapPoints[index].y, leftVertexX, topVertexY)
+            dist: distance(hlFirstPoint.x, hlFirstPoint.y, comparePoint.x, comparePoint.y)
         }, {
             name: "both-hl-first",
-            dist: distance(hlFirstPoints[index].x, hlFirstPoints[index].y, leftVertexX, topVertexY)
+            dist: distance(bothHLFirstPoint.x, bothHLFirstPoint.y, comparePoint.x, comparePoint.y)
         }, {
             name: "both-wl-first",
-            dist: distance(wlFirstPoints[index].x, wlFirstPoints[index].y, leftVertexX, topVertexY)
+            dist: distance(bothWLFirstPoint.x, bothWLFirstPoint.y, comparePoint.x, comparePoint.y)
         }];
     }
 
-    lowerLeftShortestFace = shortestDist(distanceArray(1));
+    lowerLeftShortestFace = shortestDist(distanceArray(true, false));
 
-    upperLeftShortestFace = shortestDist(distanceArray(3));
+    upperLeftShortestFace = shortestDist(distanceArray(true, true));
 
-    upperRightSwap = distance(swapPoints[5].x, swapPoints[5].y, rightVertexX, topVertexY)
-        < distance(regularPoints[5].x, regularPoints[5].y, rightVertexX, topVertexY);
+    upperRightShortestFace = shortestDist(distanceArray(false, true));
 
-    lowerRightSwap = distance(swapPoints[7].x, swapPoints[7].y, rightVertexX, bottomVertexY)
-        < distance(regularPoints[7].x, regularPoints[7].y, rightVertexX, bottomVertexY);
+    lowerRightShortestFace = shortestDist(distanceArray(false, false));
 }
 
 function shortestDist(distances) {
@@ -591,11 +622,13 @@ function fadeEverything(opacity) {
 
 function clickMouse(e) {
     var mousePos = getMousePos(canvas, e);
-    for (var i = 0; i < points.length; i += 2){
+    for (var i = 0; i < points.length; i ++){
         if ((mousePos.x >= points[i].x - POINT_RADIUS && mousePos.x <= points[i].x + POINT_RADIUS) &&
             (mousePos.y >= points[i].y - POINT_RADIUS && mousePos.y <= points[i].y + POINT_RADIUS)) {
             mouseIsDown = true;
-            selectedPointInd = i;
+            selectedPoint = points[i];
+            selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertXY);
+            selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertXY);
         }
     }
 }
@@ -603,33 +636,9 @@ function clickMouse(e) {
 function dragMouse(e) {
     var mousePos = getMousePos(canvas, e);
     if (mouseIsDown) {
-        // X and Y for Top and bottom points are obvious
-        var xsign = 1;
-        var ysign = 1;
-        var switchXy = false;
-        if (selectedPointInd == 3) {
-            xsign = -1;
-            switchXy = true;
-        } else if (selectedPointInd == 5) {
-            ysign = -1;
-            switchXy = true;
-        } else if (selectedPointInd == 6 || selectedPointInd == 2) {
-            xsign = -1;
-            ysign = -1;
-        } else if (selectedPointInd == 1) {
-            ysign = -1;
-            switchXy = true;
-        } else if (selectedPointInd == 7) {
-            xsign = -1;
-            switchXy = true;
-        }
-
-        if (switchXy) {
-            sourceY = ysign * (mousePos.x - centerPoints[selectedPointInd].x);
-            sourceX = xsign * (mousePos.y - centerPoints[selectedPointInd].y);
-        } else {
-            sourceX = xsign * (mousePos.x - centerPoints[selectedPointInd].x);
-            sourceY = ysign * (mousePos.y - centerPoints[selectedPointInd].y);
+        if (selectedPoint.dragable) {
+            sourceX = negateIfTrue(mousePos.x - selectedRectangleCenterX, selectedPoint.shouldInvertXY);
+            sourceY = negateIfTrue(mousePos.y - selectedRectangleCenterY, selectedPoint.shouldInvertXY);
         }
     }
 }
