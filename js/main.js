@@ -404,7 +404,7 @@ function drawSymmetricPointsAndLines(relx, rely) {
     if (starEdgesDisp) {
         drawStarPerimeter(points[0].x, points[0].y, innerPolygon[innerPolygon.length-1].x, innerPolygon[innerPolygon.length-1].y);
         drawStarPerimeter(points[0].x, points[0].y, innerPolygon[0].x, innerPolygon[0].y);
-        for (var k = 1; k < innerPolygon.length; k++) {
+        for (var k = 1; k < points.length; k++) {
             drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
             drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k].x, innerPolygon[k].y);
         }
@@ -466,7 +466,6 @@ function crossSourcePoint(relx, rely, isUpperLeftAdj, isOnHorizAxis) {
         false);
 
     point.dragable = true;
-    point.shouldInvertXY = isOnHorizAxis;
     return point;
 }
 
@@ -558,7 +557,11 @@ function sourcePointBothWLFirst(relx, rely, isLeft, isTop) {
 function sourcePoint(relx, rely, boxCenterX, boxCenterY, shouldInvertX, shouldInvertY, shouldSwitchXY) {
     return {
         x: boxCenterX + negateIfTrue(shouldSwitchXY ? rely : relx, shouldInvertX),
-        y: boxCenterY + negateIfTrue(shouldSwitchXY ? relx : rely, shouldInvertY)
+        y: boxCenterY + negateIfTrue(shouldSwitchXY ? relx : rely, shouldInvertY),
+        shouldInvertX: shouldInvertX,
+        shouldInvertY: shouldInvertY,
+        shouldSwitchXY: shouldSwitchXY,
+        dragable: true
     }
 }
 
@@ -707,13 +710,19 @@ function fadeEverything(opacity) {
 
 function clickMouse(e) {
     var mousePos = getMousePos(canvas, e);
+    console.log(mousePos);
     for (var i = 0; i < points.length; i ++){
         if ((mousePos.x >= points[i].x - POINT_RADIUS && mousePos.x <= points[i].x + POINT_RADIUS) &&
             (mousePos.y >= points[i].y - POINT_RADIUS && mousePos.y <= points[i].y + POINT_RADIUS)) {
             mouseIsDown = true;
             selectedPoint = points[i];
-            selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertXY);
-            selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertXY);
+
+            selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertX);
+            selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertY);
+
+
+            console.log("selectedRectangleCenterX " + selectedRectangleCenterX);
+            console.log("selectedRectangleCenterY " + selectedRectangleCenterY);
         }
     }
 }
@@ -722,8 +731,13 @@ function dragMouse(e) {
     var mousePos = getMousePos(canvas, e);
     if (mouseIsDown) {
         if (selectedPoint.dragable) {
-            sourceX = negateIfTrue(mousePos.x - selectedRectangleCenterX, selectedPoint.shouldInvertXY);
-            sourceY = negateIfTrue(mousePos.y - selectedRectangleCenterY, selectedPoint.shouldInvertXY);
+            if (selectedPoint.shouldSwitchXY) {
+                sourceX = negateIfTrue(mousePos.y - selectedRectangleCenterY, selectedPoint.shouldInvertY);
+                sourceY = negateIfTrue(mousePos.x - selectedRectangleCenterX, selectedPoint.shouldInvertX);
+            } else {
+                sourceX = negateIfTrue(mousePos.x - selectedRectangleCenterX, selectedPoint.shouldInvertX);
+                sourceY = negateIfTrue(mousePos.y - selectedRectangleCenterY, selectedPoint.shouldInvertY);
+            }
         }
     }
 }
