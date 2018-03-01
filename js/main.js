@@ -253,21 +253,40 @@ function drawSymmetricPointsAndLines(relx, rely) {
     var scaledWidth = width * SCALE;
     var scaledLength = length * SCALE;
 
-    // Apologies for the bad variable names. These are the vertices of the box
-    var leftVertexX = center_x - scaledWidth/2 - scaledLength;
-    var midLeftVertexX = center_x - scaledWidth/2;
-    var midRightVertexX = center_x + scaledWidth/2;
-    var rightVertexX = center_x + scaledWidth/2 + scaledLength;
-    var topVertexY = center_y - scaledHeight/2;
-    var bottomVertexY = center_y + scaledHeight/2;
+    var middleFaceVertex = function(isLeft, isTop) {
+        return {
+            x: center_x + negateIfTrue(scaledWidth/2, isLeft),
+            y: center_y + negateIfTrue(scaledHeight/2, isTop)
+        };
+    };
 
-    // and the vertices we use if there are more hxl faces
-    var SWAPleftVertexX = center_x - scaledWidth/2;
-    var SWAPrightVertexX = center_x + scaledWidth/2;
-    var SWAPtopVertexY = center_y - scaledHeight/2 - scaledLength;
-    var SWAPmidTopVertexY = center_y - scaledHeight/2;
-    var SWAPmidBottomVertexY = center_y + scaledHeight/2;
-    var SWAPbottomVertexY = center_y + scaledHeight/2 + scaledLength;
+    var horizAxisSourceFaceVertex = function(isLeft, isTop) {
+        return {
+            x: center_x + negateIfTrue(scaledWidth/2 + scaledLength, isLeft),
+            y: center_y + negateIfTrue(scaledHeight/2, isTop)
+        };
+    };
+
+    var vertAxisSourceFaceVertex = function(isLeft, isTop) {
+        return {
+            x: center_x + negateIfTrue(scaledWidth/2, isLeft),
+            y: center_y + negateIfTrue(scaledHeight/2 + scaledLength, isTop)
+        };
+    };
+
+    var bothWLFirstMidVertex = function(isLeft, isTop) {
+        return {
+            x: center_x + negateIfTrue(scaledWidth/2 + scaledLength, isLeft),
+            y: center_y + negateIfTrue(scaledHeight/2 + scaledWidth, isTop)
+        };
+    };
+
+    var bothHLFirstMidVertex = function(isLeft, isTop) {
+        return {
+            x: center_x + negateIfTrue(scaledWidth/2 + scaledHeight, isLeft),
+            y: center_y + negateIfTrue(scaledHeight/2 + scaledLength, isTop)
+        };
+    };
 
     var voronoi = new Voronoi();
     var bbox = {xl: -50, xr: canvas.width + 50, yt: -50, yb: canvas.height + 50};
@@ -284,46 +303,112 @@ function drawSymmetricPointsAndLines(relx, rely) {
         }
     }
 
-    // var innerPolygon = [{x: midLeftVertexX, y: bottomVertexY},
-    //     {x: leftVertexX, y: bottomVertexY},
-    //     {x: leftVertexX, y: topVertexY},
-    //     {x: midLeftVertexX, y: topVertexY},
-    //     {x: midRightVertexX, y: topVertexY},
-    //     {x: rightVertexX, y: topVertexY},
-    //     {x: rightVertexX, y: bottomVertexY},
-    //     {x: midRightVertexX, y: bottomVertexY}];
+    var innerPolygon = [];
 
-    // if (lowerLeftShortestFace === "height-length" || lowerLeftShortestFace === "both-wl-first") {
-    //     innerPolygon[0] = {x: SWAPleftVertexX, y: SWAPbottomVertexY};
-    //     innerPolygon[1] = {x: SWAPleftVertexX, y: SWAPmidBottomVertexY};
-    // }
-    // if (upperLeftShortestFace === "height-length" || upperLeftShortestFace === "both-wl-first") {
-    //     innerPolygon[2] = {x: SWAPleftVertexX, y: SWAPmidTopVertexY};
-    //     innerPolygon[3] = {x: SWAPleftVertexX, y: SWAPtopVertexY};
-    // }
-    // if (upperRightShortestFace === "height-length" || upperRightShortestFace === "both-wl-first") {
-    //     innerPolygon[4] = {x: SWAPrightVertexX, y: SWAPtopVertexY};
-    //     innerPolygon[5] = {x: SWAPrightVertexX, y: SWAPmidTopVertexY};
-    // }
-    // if (lowerLeftShortestFace === "height-length" || lowerLeftShortestFace === "both-wl-first") {
-    //     innerPolygon[6] = {x: SWAPrightVertexX, y: SWAPmidBottomVertexY};
-    //     innerPolygon[7] = {x: SWAPrightVertexX, y: SWAPbottomVertexY};
-    // }
+    // lower left
+    if (lowerLeftShortestFace === "height-length") {
+        if (displayBottomBox()) {
+            innerPolygon.push(vertAxisSourceFaceVertex(true, false));
+        }
+        innerPolygon.push(middleFaceVertex(true, false));
+    } else if (lowerLeftShortestFace === "width-length") {
+        innerPolygon.push(middleFaceVertex(true, false));
+        if (displayLeftBox()) {
+            innerPolygon.push(horizAxisSourceFaceVertex(true, false));
+        }
+    } else if (lowerLeftShortestFace === "both-hl-first") {
+        innerPolygon.push(vertAxisSourceFaceVertex(true, false));
+        innerPolygon.push(bothHLFirstMidVertex(true, false));
+        innerPolygon.push(middleFaceVertex(true, false));
+    } else {
+        innerPolygon.push(middleFaceVertex(true, false));
+        innerPolygon.push(bothWLFirstMidVertex(true, false));
+        innerPolygon.push(horizAxisSourceFaceVertex(true, false));   
+    }
 
-    // if (fadeDisp && starEdgesDisp) {
-    //     fadeOutside(points, innerPolygon, fade);
-    // } else if (fadeDisp) {
-    //     fadeEverything(fade);
-    // }
+    // upper left
+    if (upperLeftShortestFace === "height-length") {
+        innerPolygon.push(middleFaceVertex(true, true));
+        if (displayTopBox()) {
+            innerPolygon.push(vertAxisSourceFaceVertex(true, true));
+        }
+    } else if (upperLeftShortestFace === "width-length") {
+        if (displayLeftBox()) {
+            innerPolygon.push(horizAxisSourceFaceVertex(true, true));
+        }
+        innerPolygon.push(middleFaceVertex(true, true));
+    } else if (upperLeftShortestFace === "both-hl-first") {
+        innerPolygon.push(middleFaceVertex(true, true));
+        innerPolygon.push(bothHLFirstMidVertex(true, true));
+        innerPolygon.push(vertAxisSourceFaceVertex(true, true));
+    } else {
+        innerPolygon.push(horizAxisSourceFaceVertex(true, true)); 
+        innerPolygon.push(bothWLFirstMidVertex(true, true));  
+        innerPolygon.push(middleFaceVertex(true, true));
+    }
 
-    // if (starEdgesDisp) {
-    //     drawStarPerimeter(points[0].x, points[0].y, innerPolygon[innerPolygon.length-1].x, innerPolygon[innerPolygon.length-1].y);
-    //     drawStarPerimeter(points[0].x, points[0].y, innerPolygon[0].x, innerPolygon[0].y);
-    //     for (var k = 1; k < innerPolygon.length; k++) {
-    //         drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
-    //         drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k].x, innerPolygon[k].y);
-    //     }
-    // }
+    // upper right
+    if (upperRightShortestFace === "height-length") {
+        if (displayTopBox()) {
+            innerPolygon.push(vertAxisSourceFaceVertex(false, true));
+        }
+        innerPolygon.push(middleFaceVertex(false, true));
+    } else if (upperRightShortestFace === "width-length") {
+        innerPolygon.push(middleFaceVertex(false, true));
+        if (displayRightBox()) {
+            innerPolygon.push(horizAxisSourceFaceVertex(false, true));
+        }
+    } else if (upperRightShortestFace === "both-hl-first") {
+        innerPolygon.push(vertAxisSourceFaceVertex(false, true));
+        innerPolygon.push(bothHLFirstMidVertex(false, true));
+        innerPolygon.push(middleFaceVertex(false, true));
+    } else {
+        innerPolygon.push(middleFaceVertex(false, true));
+        innerPolygon.push(bothWLFirstMidVertex(false, true));
+        innerPolygon.push(horizAxisSourceFaceVertex(false, true));   
+    }
+
+    // lower right
+    if (lowerRightShortestFace === "height-length") {
+        innerPolygon.push(middleFaceVertex(false, false));
+        if (displayBottomBox()) {
+            innerPolygon.push(vertAxisSourceFaceVertex(false, false));
+        }
+    } else if (lowerRightShortestFace === "width-length") {
+        if (displayRightBox()) {
+            innerPolygon.push(horizAxisSourceFaceVertex(false, false));
+        }
+        innerPolygon.push(middleFaceVertex(false, false));
+    } else if (lowerRightShortestFace === "both-hl-first") {
+        innerPolygon.push(middleFaceVertex(false, false));
+        innerPolygon.push(bothHLFirstMidVertex(false, false));
+        innerPolygon.push(vertAxisSourceFaceVertex(false, false));
+    } else {
+        innerPolygon.push(horizAxisSourceFaceVertex(false, false));
+        innerPolygon.push(bothWLFirstMidVertex(false, false));   
+        innerPolygon.push(middleFaceVertex(false, false));
+    }
+
+
+    if (lowerLeftShortestFace === "both-wl-first") {
+        var first = innerPolygon.shift();
+        innerPolygon.push(first);
+    }
+
+    if (fadeDisp && starEdgesDisp) {
+        fadeOutside(points, innerPolygon, fade);
+    } else if (fadeDisp) {
+        fadeEverything(fade);
+    }
+
+    if (starEdgesDisp) {
+        drawStarPerimeter(points[0].x, points[0].y, innerPolygon[innerPolygon.length-1].x, innerPolygon[innerPolygon.length-1].y);
+        drawStarPerimeter(points[0].x, points[0].y, innerPolygon[0].x, innerPolygon[0].y);
+        for (var k = 1; k < innerPolygon.length; k++) {
+            drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
+            drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k].x, innerPolygon[k].y);
+        }
+    }
 
     for (var j = 0; j < points.length; j++) {
         drawPoint(points[j].x, points[j].y, points[j].dragable);
