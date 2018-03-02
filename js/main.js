@@ -717,9 +717,13 @@ function clickMouse(e) {
             mouseIsDown = true;
             selectedPoint = points[i];
 
-            selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertX);
-            selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertY);
-
+            if (selectedPoint.shouldSwitchXY) {
+                selectedRectangleCenterX = selectedPoint.x + negateIfTrue(sourceY, selectedPoint.shouldInvertY);
+                selectedRectangleCenterY = selectedPoint.y + negateIfTrue(sourceX, selectedPoint.shouldInvertX);
+            } else {
+                selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertX);
+                selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertY);
+            }
 
             console.log("selectedRectangleCenterX " + selectedRectangleCenterX);
             console.log("selectedRectangleCenterY " + selectedRectangleCenterY);
@@ -732,8 +736,8 @@ function dragMouse(e) {
     if (mouseIsDown) {
         if (selectedPoint.dragable) {
             if (selectedPoint.shouldSwitchXY) {
-                sourceX = negateIfTrue(mousePos.y - selectedRectangleCenterY, selectedPoint.shouldInvertY);
                 sourceY = negateIfTrue(mousePos.x - selectedRectangleCenterX, selectedPoint.shouldInvertX);
+                sourceX = negateIfTrue(mousePos.y - selectedRectangleCenterY, selectedPoint.shouldInvertY);
             } else {
                 sourceX = negateIfTrue(mousePos.x - selectedRectangleCenterX, selectedPoint.shouldInvertX);
                 sourceY = negateIfTrue(mousePos.y - selectedRectangleCenterY, selectedPoint.shouldInvertY);
