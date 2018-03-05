@@ -293,7 +293,7 @@ function drawSymmetricPointsAndLines(relx, rely) {
     try {
         voronoiDiagram = voronoi.compute(points, bbox);
     } catch(Exception) {
-        console.log("oops");
+
     }
 
     if (voronoiDisp) {
@@ -408,6 +408,9 @@ function drawSymmetricPointsAndLines(relx, rely) {
             drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
             drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k].x, innerPolygon[k].y);
         }
+        // if (innerPolygon.length === 9) {
+        //     drawStarPerimeter(innerPolygon[7].x, innerPolygon[7].y, innerPolygon[8].x, innerPolygon[8].y);
+        // }
     }
 
     for (var j = 0; j < points.length; j++) {
@@ -710,7 +713,6 @@ function fadeEverything(opacity) {
 
 function clickMouse(e) {
     var mousePos = getMousePos(canvas, e);
-    console.log(mousePos);
     for (var i = 0; i < points.length; i ++){
         if ((mousePos.x >= points[i].x - POINT_RADIUS && mousePos.x <= points[i].x + POINT_RADIUS) &&
             (mousePos.y >= points[i].y - POINT_RADIUS && mousePos.y <= points[i].y + POINT_RADIUS)) {
@@ -724,9 +726,6 @@ function clickMouse(e) {
                 selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertX);
                 selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertY);
             }
-
-            console.log("selectedRectangleCenterX " + selectedRectangleCenterX);
-            console.log("selectedRectangleCenterY " + selectedRectangleCenterY);
         }
     }
 }
