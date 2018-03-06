@@ -61,10 +61,10 @@ function draw() {
         drawBgRectangles(width, height, length);
     }
 
-    var minimumx = - (width*SCALE)/2;
-    var maximumx = width*SCALE/2;
-    var minimumy = - height*SCALE/2;
-    var maximumy = height*SCALE/2;
+    var minimumx = - ((width*SCALE)/2 - 1);
+    var maximumx = width*SCALE/2 - 1;
+    var minimumy = - (height*SCALE/2 - 1);
+    var maximumy = (height*SCALE/2 - 1);
     sourceX = Math.max(Math.min(sourceX, maximumx), minimumx);
     sourceY = Math.max(Math.min(sourceY, maximumy), minimumy);
 
