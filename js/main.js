@@ -568,7 +568,7 @@ function sourcePoint(relx, rely, boxCenterX, boxCenterY, shouldInvertX, shouldIn
 }
 
 function middlePoint() {
-    var point = sourcePoint(sourceX, sourceY, center_x, center_y, false, false, false);
+    var point = sourcePoint(sourceX, sourceY, center_x, center_y, false, true, false);
     point.dragable = true;
     return point;
 }
