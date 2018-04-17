@@ -408,14 +408,14 @@ function drawSymmetricPointsAndLines(relx, rely) {
             drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k-1].x, innerPolygon[k-1].y);
             drawStarPerimeter(points[k].x, points[k].y, innerPolygon[k].x, innerPolygon[k].y);
         }
-        // if (innerPolygon.length === 9) {
-        //     drawStarPerimeter(innerPolygon[7].x, innerPolygon[7].y, innerPolygon[8].x, innerPolygon[8].y);
-        // }
     }
 
     for (var j = 0; j < points.length; j++) {
         drawPoint(points[j].x, points[j].y, points[j].dragable);
     }
+
+    var middle = middlePoint();
+    drawPoint(middle.x, middle.y, true);
 }
 
 function displayTopBox() {
@@ -468,7 +468,6 @@ function crossSourcePoint(relx, rely, isUpperLeftAdj, isOnHorizAxis) {
         isOnHorizAxis, isOnHorizAxis,
         false);
 
-    point.dragable = true;
     return point;
 }
 
@@ -564,8 +563,14 @@ function sourcePoint(relx, rely, boxCenterX, boxCenterY, shouldInvertX, shouldIn
         shouldInvertX: shouldInvertX,
         shouldInvertY: shouldInvertY,
         shouldSwitchXY: shouldSwitchXY,
-        dragable: true
+        dragable: false
     }
+}
+
+function middlePoint() {
+    var point = sourcePoint(sourceX, sourceY, center_x, center_y, false, false, false);
+    point.dragable = true;
+    return point;
 }
 
 function setSwapBooleans(x, y) {
@@ -713,19 +718,35 @@ function fadeEverything(opacity) {
 
 function clickMouse(e) {
     var mousePos = getMousePos(canvas, e);
-    for (var i = 0; i < points.length; i ++){
-        if ((mousePos.x >= points[i].x - POINT_RADIUS && mousePos.x <= points[i].x + POINT_RADIUS) &&
-            (mousePos.y >= points[i].y - POINT_RADIUS && mousePos.y <= points[i].y + POINT_RADIUS)) {
-            mouseIsDown = true;
-            selectedPoint = points[i];
+    // uncomment for making vertices draggable again
+    // for (var i = 0; i < points.length; i ++){
+    //     if ((mousePos.x >= points[i].x - POINT_RADIUS && mousePos.x <= points[i].x + POINT_RADIUS) &&
+    //         (mousePos.y >= points[i].y - POINT_RADIUS && mousePos.y <= points[i].y + POINT_RADIUS)) {
+    //         mouseIsDown = true;
+    //         selectedPoint = points[i];
 
-            if (selectedPoint.shouldSwitchXY) {
-                selectedRectangleCenterX = selectedPoint.x + negateIfTrue(sourceY, selectedPoint.shouldInvertY);
-                selectedRectangleCenterY = selectedPoint.y + negateIfTrue(sourceX, selectedPoint.shouldInvertX);
-            } else {
-                selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertX);
-                selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertY);
-            }
+    //         if (selectedPoint.shouldSwitchXY) {
+    //             selectedRectangleCenterX = selectedPoint.x + negateIfTrue(sourceY, selectedPoint.shouldInvertY);
+    //             selectedRectangleCenterY = selectedPoint.y + negateIfTrue(sourceX, selectedPoint.shouldInvertX);
+    //         } else {
+    //             selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertX);
+    //             selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertY);
+    //         }
+    //     }
+    // }
+
+    var middle = middlePoint();
+    if ((mousePos.x >= middle.x - POINT_RADIUS && mousePos.x <= middle.x + POINT_RADIUS) &&
+        (mousePos.y >= middle.y - POINT_RADIUS && mousePos.y <= middle.y + POINT_RADIUS)) {
+        mouseIsDown = true;
+        selectedPoint = middle;
+
+        if (selectedPoint.shouldSwitchXY) {
+            selectedRectangleCenterX = selectedPoint.x + negateIfTrue(sourceY, selectedPoint.shouldInvertY);
+            selectedRectangleCenterY = selectedPoint.y + negateIfTrue(sourceX, selectedPoint.shouldInvertX);
+        } else {
+            selectedRectangleCenterX = selectedPoint.x - negateIfTrue(sourceX, selectedPoint.shouldInvertX);
+            selectedRectangleCenterY = selectedPoint.y - negateIfTrue(sourceY, selectedPoint.shouldInvertY);
         }
     }
 }
