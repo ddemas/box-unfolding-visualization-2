@@ -42,6 +42,8 @@ var upperRightShortestFace = "height-length";
 var lowerLeftShortestFace = "height-length";
 var lowerRightShortestFace = "height-length";
 
+var printImage;
+
 resizeCanvas();
 setInterval(draw, 10);
 
@@ -74,6 +76,8 @@ function draw() {
     centerPoints = starPoints(0,0);
 
     drawSymmetricPointsAndLines(sourceX,sourceY);
+
+    printImage = canvas.toDataURL("unfolding/png");
 
     //document.getElementById("perimeter").innerHTML=perimeter;
 }
@@ -851,4 +855,24 @@ $(function() {
             fade = ui.value;
         }
     });
+});
+
+
+//////////////////////////////////////////////////////////////
+// Print                                                    //
+//////////////////////////////////////////////////////////////
+
+$('#printButton').on('click', function(event) {
+    var popup = window.open();
+    popup.document.open();
+    popup.document.onreadystatechange = function() {
+        if(this.readyState === 'complete') {
+            this.onreadystatechange = function() {};
+            popup.focus();
+            popup.print();
+            popup.close();
+        }
+    }
+    popup.document.write('<img src="'+printImage+'"/>');
+    popup.document.close();
 });

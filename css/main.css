@@ -105,7 +105,12 @@ span {
     color: orangered;
 }
 
-
+#printButton {
+    position:absolute;
+    top: 20px;
+    left: 480px;
+    z-index:1000;
+}
 
 
 
