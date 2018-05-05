@@ -873,6 +873,6 @@ $('#printButton').on('click', function(event) {
             popup.close();
         }
     }
-    popup.document.write('<img src="'+printImage+'"/>');
+    popup.document.write('<img src="' + printImage + '"/>');
     popup.document.close();
 });
