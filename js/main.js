@@ -870,7 +870,6 @@ $('#printButton').on('click', function(event) {
             this.onreadystatechange = function() {};
             popup.focus();
             popup.print();
-            popup.close();
         }
     }
     popup.document.write('<img src="' + printImage + '"/>');
