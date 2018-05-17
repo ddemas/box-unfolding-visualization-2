@@ -869,7 +869,6 @@ $('#printButton').on('click', function(event) {
         if(this.readyState === 'complete') {
             this.onreadystatechange = function() {};
             popup.focus();
-            popup.print();
         }
     }
     popup.document.write('<img src="' + printImage + '"/>');
